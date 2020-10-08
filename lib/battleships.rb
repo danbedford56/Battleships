@@ -35,6 +35,16 @@ class Game
     @aiShips = []
   end
 
+  def validateCell(row, column)
+    if column == nil
+      return false
+    elsif column >= 1 && column <= 7 && row >= 1 && row <= 7
+      return true
+    else
+      return false
+    end
+  end
+
   def placeShips(converter, boat)
     @playerShips << Ship.new(4)
     @playerShips << Ship.new(3)
@@ -48,17 +58,14 @@ class Game
         puts Terminal::Table.new :title => "Your Board:", :rows => @playerBoard
         puts "Please place your ship of size: #{ship.size}"
         cellValid = false
-        while cellValid == false
+        while !cellValid
           puts "Enter a cell to start your ship (letter first)"
           cell = gets.chomp.split("")
           row = cell[1].to_i
           column = converter[cell[0].upcase]
-          if column == nil
-            puts "This is not a valid cell"
-          elsif column >= 1 && column <= 7 && row >= 1 && row <= 7
-            cellValid = true
-          else
-            puts "This is not a valid cell"
+          cellValid = validateCell(row, column)
+          if !cellValid
+            puts "Invalid cell!"
           end
         end
 
@@ -150,7 +157,7 @@ class Game
     @aiShips.each do |ship|
       # while true to re-place if ship clashes
       shipPlaced = false
-      while shipPlaced == false
+      while !shipPlaced
         row = rand(1..7)
         column = rand(1..7)
         direction = ""
@@ -216,17 +223,17 @@ class Game
 
   def playerMove(converter, explosion, miss)
     cellValid = false
-    while cellValid == false
+    while !cellValid
       puts "Enter cell to strike (Letter First):"
       cell = gets.chomp.split("")
       column = converter[cell[0].upcase]
       row = cell[1].to_i
-      if column == nil
-        puts "This is not a valid cell"
-      elsif column >= 1 && column <= 7 && row >= 1 && row <= 7
-        cellValid = true
-      else
-        puts "This is not a valid cell"
+      cellValid = validateCell(row, column)
+      if @opBoard[row][column] == miss || @opBoard[row][column] == explosion
+        cellValid = false
+      end
+      if !cellValid
+        puts "Invalid cell!"
       end
     end
     strike = [row, column]
@@ -270,7 +277,7 @@ class Game
       row = rand(1..7)
       column = rand(1..7)
       strike = [row, column]
-      if @playerBoard[strike[0]][strike[1]] != miss
+      if @playerBoard[strike[0]][strike[1]] != miss && @playerBoard[strike[0]][strike[1]] != explosion
         break
       end
     end
@@ -332,7 +339,6 @@ class Game
       end
     end
   end
-
 end
 
 class Ship
