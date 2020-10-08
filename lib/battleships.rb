@@ -1,25 +1,29 @@
 require 'terminal-table/import'
 require 'colorize'
+WATER = "\u{1F30A}"
+BOAT = "\u{1F6A2}"
+EXPLOSION = "\u{1F4A5}"
+MISS = "\u{274C}"
 
 rows = []
 rows << [" ","A", "B", "C", "D", "E", "F", "G"]
-rows << ["1", "o", "o", "o", "o", "o", "o", "o"]
-rows << ["2", "o", "o", "o", "o", "o", "o", "o"]
-rows << ["3", "o", "o", "o", "o", "o", "o", "o"]
-rows << ["4", "o", "o", "o", "o", "o", "o", "o"]
-rows << ["5", "o", "o", "o", "o", "o", "o", "o"]
-rows << ["6", "o", "o", "o", "o", "o", "o", "o"]
-rows << ["7", "o", "o", "o", "o", "o", "o", "o"]
+rows << ["1", WATER, WATER, WATER, WATER, WATER, WATER, WATER]
+rows << ["2", WATER, WATER, WATER, WATER, WATER, WATER, WATER]
+rows << ["3", WATER, WATER, WATER, WATER, WATER, WATER, WATER]
+rows << ["4", WATER, WATER, WATER, WATER, WATER, WATER, WATER]
+rows << ["5", WATER, WATER, WATER, WATER, WATER, WATER, WATER]
+rows << ["6", WATER, WATER, WATER, WATER, WATER, WATER, WATER]
+rows << ["7", WATER, WATER, WATER, WATER, WATER, WATER, WATER]
 
 rows2 = []
 rows2 << [" ","A", "B", "C", "D", "E", "F", "G"]
-rows2 << ["1", "o", "o", "o", "o", "o", "o", "o"]
-rows2 << ["2", "o", "o", "o", "o", "o", "o", "o"]
-rows2 << ["3", "o", "o", "o", "o", "o", "o", "o"]
-rows2 << ["4", "o", "o", "o", "o", "o", "o", "o"]
-rows2 << ["5", "o", "o", "o", "o", "o", "o", "o"]
-rows2 << ["6", "o", "o", "o", "o", "o", "o", "o"]
-rows2 << ["7", "o", "o", "o", "o", "o", "o", "o"]
+rows2 << ["1", WATER, WATER, WATER, WATER, WATER, WATER, WATER]
+rows2 << ["2", WATER, WATER, WATER, WATER, WATER, WATER, WATER]
+rows2 << ["3", WATER, WATER, WATER, WATER, WATER, WATER, WATER]
+rows2 << ["4", WATER, WATER, WATER, WATER, WATER, WATER, WATER]
+rows2 << ["5", WATER, WATER, WATER, WATER, WATER, WATER, WATER]
+rows2 << ["6", WATER, WATER, WATER, WATER, WATER, WATER, WATER]
+rows2 << ["7", WATER, WATER, WATER, WATER, WATER, WATER, WATER]
 
 table = Terminal::Table.new :rows => rows
 columnConverter = {"A" => 1, "B" => 2, "C" => 3, "D" => 4, "E" => 5, "F" => 6, "G" => 7}
@@ -32,7 +36,7 @@ class Game
     @aiShips = []
   end
 
-  def placeShips(converter)
+  def placeShips(converter, boat)
     columnConverter = converter
     @playerShips << Ship.new(4)
     @playerShips << Ship.new(3)
@@ -42,6 +46,7 @@ class Game
     column = ""
     direction = ""
     @playerShips.each do |ship|
+      system "clear"
       puts Terminal::Table.new :title => "Your Board:", :rows => @playerBoard
       puts "Please place your ship of size: #{ship.size}"
       puts "Enter a row to start your ship on (1-7)."
@@ -98,13 +103,13 @@ class Game
 
       # Place ships on board
       shipCoords.each do |coord|
-        @playerBoard[coord[0]][coord[1]] = "S".green
+        @playerBoard[coord[0]][coord[1]] = boat
         ship.coords << [coord[0],coord[1]]
       end
     end
   end
 
-  def aiPlaceShips
+  def aiPlaceShips()
     directions = ["right", "left", "up", "down"]
     @aiShips << Ship.new(4)
     @aiShips << Ship.new(3)
@@ -117,8 +122,6 @@ class Game
         row = rand(1..7)
         column = rand(1..7)
         direction = ""
-        puts row
-        puts column
         # Sets random direction until valid
         while true
           direction = directions[rand(0..4)]
@@ -170,7 +173,7 @@ class Game
         # Places ship if not clashing
         if !clashing
           shipCoords.each do |coord|
-            @opBoard[coord[0]][coord[1]] = "S".red
+            # For testing AI placement: @opBoard[coord[0]][coord[1]] = boat
             ship.coords << [coord[0],coord[1]]
           end
           shipPlaced = true
@@ -179,7 +182,7 @@ class Game
     end
   end
 
-  def playerMove(converter)
+  def playerMove(converter, explosion, miss)
     puts "Enter row to strike:"
     row = gets.chomp.to_i
     puts "Enter column to strike:"
@@ -206,40 +209,41 @@ class Game
       end
     end
 
+    system "clear"
     # displays hit or miss message and damages hit ship
     if destroyed
       puts "You destroyed a ship!"
-      @opBoard[strike[0]][strike[1]] = "X".red
+      @opBoard[strike[0]][strike[1]] = explosion
     elsif hit
       puts "You hit!"
-      @opBoard[strike[0]][strike[1]] = "X".red
+      @opBoard[strike[0]][strike[1]] = explosion
     else
       puts "You missed!"
-      @opBoard[strike[0]][strike[1]] = "O".blue
+      @opBoard[strike[0]][strike[1]] = miss
     end
   end
 
-  def aiMove
+  def aiMove(miss, explosion)
     while true
       row = rand(1..7)
       column = rand(1..7)
       strike = [row, column]
-      if @playerBoard[strike[0]][strike[1]] == "o"
+      if @playerBoard[strike[0]][strike[1]] != miss
         break
       end
     end
+
     hit = false
     destroyed = false
-
     # Checks if strike is true
-    @aiShips.each do |aiShip|
-      aiShip.coords.each do |coord|
+    @playerShips.each do |ship|
+      ship.coords.each do |coord|
         if strike == coord
           hit = true
-          aiShip.damage
-          if aiShip.isDead
+          ship.damage
+          if ship.isDead
             destroyed = true
-            @aiShips.delete(aiShip)
+            @playerShips.delete(ship)
           end
           break
         end
@@ -248,27 +252,39 @@ class Game
         break
       end
     end
-
-    # displays hit or miss message and damages hit ship
     if destroyed
-      puts "You destroyed a ship!"
-      @opBoard[strike[0]][strike[1]] = "X".red
+      puts "Your opponent destroyed a ship!"
+      @playerBoard[strike[0]][strike[1]] = explosion
     elsif hit
-      puts "You hit!"
-      @opBoard[strike[0]][strike[1]] = "X".red
+      puts "Your opponent hit!"
+      @playerBoard[strike[0]][strike[1]] = explosion
     else
-      puts "You missed!"
-      @opBoard[strike[0]][strike[1]] = "O".blue
+      puts "Your opponent missed!"
+      @playerBoard[strike[0]][strike[1]] = miss
     end
   end
 
   #Unfinished
-  def runGame(columnConverter)
+  def runGame(columnConverter, water, boat, explosion, miss)
+    gameRunning = true
+    aiPlaceShips()
+    placeShips(columnConverter, boat)
+    while gameRunning == true
+      system "clear"
       puts Terminal::Table.new :title => "Your Board:", :rows => @playerBoard
       puts Terminal::Table.new :title => "Opponent's Board:", :rows => @opBoard
-      playerMove(columnConverter)
+      playerMove(columnConverter, explosion, miss)
+      aiMove(miss, explosion)
       puts Terminal::Table.new :title => "Your Board:", :rows => @playerBoard
       puts Terminal::Table.new :title => "Opponent's Board:", :rows => @opBoard
+      if @playerShips == 0
+        puts "You lose!"
+        break
+      elsif @aiShips == 0
+        puts "You win!"
+        break
+      end
+    end
   end
 
 end
@@ -294,10 +310,7 @@ class Ship
       return false
     end
   end
-
 end
 
 game = Game.new(rows, rows2)
-game.aiPlaceShips
-game.placeShips(columnConverter)
-game.runGame(columnConverter)
+game.runGame(columnConverter,WATER, BOAT, EXPLOSION, MISS)
