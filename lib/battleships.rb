@@ -215,6 +215,7 @@ class Game
   end
 
   def playerMove(converter, explosion, miss)
+    cellValid = false
     while cellValid == false
       puts "Enter cell to strike (Letter First):"
       cell = gets.chomp.split("")
