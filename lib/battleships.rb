@@ -25,7 +25,6 @@ rows2 << ["5", WATER, WATER, WATER, WATER, WATER, WATER, WATER]
 rows2 << ["6", WATER, WATER, WATER, WATER, WATER, WATER, WATER]
 rows2 << ["7", WATER, WATER, WATER, WATER, WATER, WATER, WATER]
 
-table = Terminal::Table.new :rows => rows
 columnConverter = {"A" => 1, "B" => 2, "C" => 3, "D" => 4, "E" => 5, "F" => 6, "G" => 7}
 
 class Game
@@ -109,7 +108,7 @@ class Game
     end
   end
 
-  def aiPlaceShips()
+  def aiPlaceShips(boat)
     directions = ["right", "left", "up", "down"]
     @aiShips << Ship.new(4)
     @aiShips << Ship.new(3)
@@ -173,7 +172,7 @@ class Game
         # Places ship if not clashing
         if !clashing
           shipCoords.each do |coord|
-            # For testing AI placement: @opBoard[coord[0]][coord[1]] = boat
+            # For testing AI placement:@opBoard[coord[0]][coord[1]] = boat
             ship.coords << [coord[0],coord[1]]
           end
           shipPlaced = true
@@ -267,20 +266,20 @@ class Game
   #Unfinished
   def runGame(columnConverter, water, boat, explosion, miss)
     gameRunning = true
-    aiPlaceShips()
+    aiPlaceShips(boat)
     placeShips(columnConverter, boat)
+    system "clear"
+    puts Terminal::Table.new :title => "Your Board:", :rows => @playerBoard
+    puts Terminal::Table.new :title => "Opponent's Board:", :rows => @opBoard
     while gameRunning == true
-      system "clear"
-      puts Terminal::Table.new :title => "Your Board:", :rows => @playerBoard
-      puts Terminal::Table.new :title => "Opponent's Board:", :rows => @opBoard
       playerMove(columnConverter, explosion, miss)
       aiMove(miss, explosion)
       puts Terminal::Table.new :title => "Your Board:", :rows => @playerBoard
       puts Terminal::Table.new :title => "Opponent's Board:", :rows => @opBoard
-      if @playerShips == 0
+      if @playerShips.length == 0
         puts "You lose!"
         break
-      elsif @aiShips == 0
+      elsif @aiShips.length == 0
         puts "You win!"
         break
       end
