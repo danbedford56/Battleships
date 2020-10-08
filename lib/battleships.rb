@@ -40,8 +40,6 @@ class Game
     @playerShips << Ship.new(3)
     @playerShips << Ship.new(2)
     @playerShips << Ship.new(2)
-    row = 0
-    column = ""
     direction = ""
     @playerShips.each do |ship|
       shipPlaced = false
@@ -49,12 +47,22 @@ class Game
       while shipPlaced == false
         puts Terminal::Table.new :title => "Your Board:", :rows => @playerBoard
         puts "Please place your ship of size: #{ship.size}"
-        puts "Enter a cell to start your ship (letter first)"
-        cell = gets.chomp.split("")
-        row = cell[1].to_i
-        column = converter[cell[0].upcase]
-        directionValid = false
+        cellValid = false
+        while cellValid == false
+          puts "Enter a cell to start your ship (letter first)"
+          cell = gets.chomp.split("")
+          row = cell[1].to_i
+          column = converter[cell[0].upcase]
+          if column == nil
+            puts "This is not a valid cell"
+          elsif column >= 1 && column <= 7 && row >= 1 && row <= 7
+            cellValid = true
+          else
+            puts "This is not a valid cell"
+          end
+        end
 
+        directionValid = false
         #Loop to get direction until valid
         while directionValid == false
           # Input validation
@@ -207,11 +215,19 @@ class Game
   end
 
   def playerMove(converter, explosion, miss)
-    puts "Enter cell to strike (Letter First):"
-    cell = gets.chomp
-    cell = cell.split("")
-    column = converter[cell[0].upcase]
-    row = cell[1].to_i
+    while cellValid == false
+      puts "Enter cell to strike (Letter First):"
+      cell = gets.chomp.split("")
+      column = converter[cell[0].upcase]
+      row = cell[1].to_i
+      if column == nil
+        puts "This is not a valid cell"
+      elsif column >= 1 && column <= 7 && row >= 1 && row <= 7
+        cellValid = true
+      else
+        puts "This is not a valid cell"
+      end
+    end
     strike = [row, column]
     hit = false
     destroyed = false
@@ -289,19 +305,19 @@ class Game
     end
   end
 
-  def runGame(columnConverter, water, boat, explosion, miss)
+  def runGame(converter, water, boat, explosion, miss)
     gameRunning = true
 
     # Ship placement
     aiPlaceShips(boat)
-    placeShips(columnConverter, boat)
+    placeShips(converter, boat)
     system "clear"
     puts Terminal::Table.new :title => "Your Board:", :rows => @playerBoard
     puts Terminal::Table.new :title => "Opponent's Board:", :rows => @opBoard
 
     # Main game loop
     while gameRunning == true
-      playerMove(columnConverter, explosion, miss)
+      playerMove(converter, explosion, miss)
       aiMove(miss, explosion)
       puts Terminal::Table.new :title => "Your Board:", :rows => @playerBoard
       puts Terminal::Table.new :title => "Opponent's Board:", :rows => @opBoard
