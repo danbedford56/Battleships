@@ -269,8 +269,8 @@ class Game
     gameRunning = true
     aiPlaceShips()
     placeShips(columnConverter, boat)
+    system "clear"
     while gameRunning == true
-      system "clear"
       puts Terminal::Table.new :title => "Your Board:", :rows => @playerBoard
       puts Terminal::Table.new :title => "Opponent's Board:", :rows => @opBoard
       playerMove(columnConverter, explosion, miss)
