@@ -1,5 +1,5 @@
 require 'terminal-table/import'
-require 'colorize'
+
 WATER = "\u{1F30A}"
 BOAT = "\u{1F6A2}"
 EXPLOSION = "\u{1F4A5}"
@@ -44,67 +44,91 @@ class Game
     column = ""
     direction = ""
     @playerShips.each do |ship|
+      shipPlaced = false
       system "clear"
-      puts Terminal::Table.new :title => "Your Board:", :rows => @playerBoard
-      puts "Please place your ship of size: #{ship.size}"
-      puts "Enter a cell to start your ship (letter first)"
-      cell = gets.chomp.split("")
-      row = cell[1].to_i
-      column = converter[cell[0].upcase]
-      directionValid = false
+      while shipPlaced == false
+        puts Terminal::Table.new :title => "Your Board:", :rows => @playerBoard
+        puts "Please place your ship of size: #{ship.size}"
+        puts "Enter a cell to start your ship (letter first)"
+        cell = gets.chomp.split("")
+        row = cell[1].to_i
+        column = converter[cell[0].upcase]
+        directionValid = false
 
-      #Loop to get direction until valid
-      while directionValid == false
-        # Input validation
-        while true
-          directions = ["up", "down", "left", "right"]
-          puts "Enter direction for your ship to face (up, down, left, right)"
-          direction = gets.chomp
-          if !directions.include?(direction)
-            puts "Invalid direction."
+        #Loop to get direction until valid
+        while directionValid == false
+          # Input validation
+          while true
+            directions = ["up", "down", "left", "right"]
+            puts "Enter direction for your ship to face (up, down, left, right)"
+            direction = gets.chomp
+            if !directions.include?(direction)
+              puts "Invalid direction."
+            else
+              break
+            end
+          end
+          if direction == "up" && (row - (ship.size - 1) < 0)
+            puts "Ship does not fit."
+          elsif direction == "down" && (row + (ship.size - 1) > 7)
+            puts "Ship does not fit."
+          elsif direction == "left" && (column - (ship.size - 1) < 0)
+            puts "Ship does not fit."
+          elsif direction == "right" && (column + (ship.size - 1) > 7)
+            puts "Ship does not fit."
           else
-            break
+            directionValid = true
           end
         end
-        if direction == "up" && (row - (ship.size - 1) < 0)
-          puts "Ship does not fit."
-        elsif direction == "down" && (row + (ship.size - 1) > 7)
-          puts "Ship does not fit."
-        elsif direction == "left" && (column - (ship.size - 1) < 0)
-          puts "Ship does not fit."
-        elsif direction == "right" && (column + (ship.size - 1) > 7)
-          puts "Ship does not fit."
-        else
-          directionValid = true
-        end
-      end
 
-      #Set ship coords
-      shipCoords = []
-      shipCoords << [row, column]
-      case direction
-      when "up"
-        for i in 1..(ship.size - 1) do
-          shipCoords << [row - i, column]
+        #Set ship coords
+        shipCoords = []
+        shipCoords << [row, column]
+        case direction
+        when "up"
+          for i in 1..(ship.size - 1) do
+            shipCoords << [row - i, column]
+          end
+        when "down"
+          for i in 1..(ship.size - 1) do
+            shipCoords << [row + i, column]
+          end
+        when "left"
+          for i in 1..(ship.size - 1) do
+            shipCoords << [row, column - i]
+          end
+        when "right"
+          for i in 1..(ship.size - 1) do
+            shipCoords << [row, column + i]
+          end
         end
-      when "down"
-        for i in 1..(ship.size - 1) do
-          shipCoords << [row + i, column]
-        end
-      when "left"
-        for i in 1..(ship.size - 1) do
-          shipCoords << [row, column - i]
-        end
-      when "right"
-        for i in 1..(ship.size - 1) do
-          shipCoords << [row, column + i]
-        end
-      end
 
-      # Place ships on board
-      shipCoords.each do |coord|
-        @playerBoard[coord[0]][coord[1]] = boat
-        ship.coords << [coord[0],coord[1]]
+        # Checks if ship clashes with previously placed ships
+        clashing = false
+        shipCoords.each do |coord|
+          @playerShips.each do |pShip|
+            pShip.coords.each do |coord2|
+              if coord == coord2
+                clashing = true
+              end
+            end
+          end
+        end
+
+        # Places ship if not clashing
+        if !clashing
+          # Place ships on board
+          shipCoords.each do |coord|
+            @playerBoard[coord[0]][coord[1]] = boat
+            ship.coords << [coord[0],coord[1]]
+          end
+          shipPlaced = true
+        end
+
+        if !shipPlaced
+          system "clear"
+          puts "This clashes with another ship! Please re-enter"
+        end
       end
     end
   end
@@ -265,19 +289,23 @@ class Game
     end
   end
 
-  #Unfinished
   def runGame(columnConverter, water, boat, explosion, miss)
     gameRunning = true
+
+    # Ship placement
     aiPlaceShips(boat)
     placeShips(columnConverter, boat)
     system "clear"
     puts Terminal::Table.new :title => "Your Board:", :rows => @playerBoard
     puts Terminal::Table.new :title => "Opponent's Board:", :rows => @opBoard
+
+    # Main game loop
     while gameRunning == true
       playerMove(columnConverter, explosion, miss)
       aiMove(miss, explosion)
       puts Terminal::Table.new :title => "Your Board:", :rows => @playerBoard
       puts Terminal::Table.new :title => "Opponent's Board:", :rows => @opBoard
+      # Win/loss check
       if @playerShips.length == 0
         puts "You lose!"
         gameRunning = false
