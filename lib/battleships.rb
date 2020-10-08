@@ -36,7 +36,6 @@ class Game
   end
 
   def placeShips(converter, boat)
-    columnConverter = converter
     @playerShips << Ship.new(4)
     @playerShips << Ship.new(3)
     @playerShips << Ship.new(2)
@@ -48,18 +47,20 @@ class Game
       system "clear"
       puts Terminal::Table.new :title => "Your Board:", :rows => @playerBoard
       puts "Please place your ship of size: #{ship.size}"
-      puts "Enter a row to start your ship on (1-7)."
-      row = gets.chomp.to_i
-      puts "Enter a column to start your ship on (A-G)"
-      column = gets.chomp
+      puts "Enter a cell to start your ship (letter first)"
+      cell = gets.chomp.split("")
+      row = cell[1].to_i
+      column = converter[cell[0].upcase]
+      directionValid = false
 
       #Loop to get direction until valid
-      while true
+      while directionValid == false
         # Input validation
         while true
+          directions = ["up", "down", "left", "right"]
           puts "Enter direction for your ship to face (up, down, left, right)"
           direction = gets.chomp
-          if direction != "up" && direction != "down" && direction != "left" && direction != "right"
+          if !directions.include?(direction)
             puts "Invalid direction."
           else
             break
@@ -69,34 +70,34 @@ class Game
           puts "Ship does not fit."
         elsif direction == "down" && (row + (ship.size - 1) > 7)
           puts "Ship does not fit."
-        elsif direction == "left" && (columnConverter[column.upcase] - (ship.size - 1) < 0)
+        elsif direction == "left" && (column - (ship.size - 1) < 0)
           puts "Ship does not fit."
-        elsif direction == "right" && (columnConverter[column.upcase] + (ship.size - 1) > 7)
+        elsif direction == "right" && (column + (ship.size - 1) > 7)
           puts "Ship does not fit."
         else
-          break
+          directionValid = true
         end
       end
 
       #Set ship coords
       shipCoords = []
-      shipCoords << [row, columnConverter[column.upcase]]
+      shipCoords << [row, column]
       case direction
       when "up"
         for i in 1..(ship.size - 1) do
-          shipCoords << [row - i, columnConverter[column.upcase]]
+          shipCoords << [row - i, column]
         end
       when "down"
         for i in 1..(ship.size - 1) do
-          shipCoords << [row + i, columnConverter[column.upcase]]
+          shipCoords << [row + i, column]
         end
       when "left"
         for i in 1..(ship.size - 1) do
-          shipCoords << [row, columnConverter[column.upcase] - i]
+          shipCoords << [row, column - i]
         end
       when "right"
         for i in 1..(ship.size - 1) do
-          shipCoords << [row, columnConverter[column.upcase] + i]
+          shipCoords << [row, column + i]
         end
       end
 
@@ -172,7 +173,7 @@ class Game
         # Places ship if not clashing
         if !clashing
           shipCoords.each do |coord|
-            # For testing AI placement:@opBoard[coord[0]][coord[1]] = boat
+            # For testing AI placement: @opBoard[coord[0]][coord[1]] = boat
             ship.coords << [coord[0],coord[1]]
           end
           shipPlaced = true
@@ -182,10 +183,11 @@ class Game
   end
 
   def playerMove(converter, explosion, miss)
-    puts "Enter row to strike:"
-    row = gets.chomp.to_i
-    puts "Enter column to strike:"
-    column = converter[gets.chomp.upcase]
+    puts "Enter cell to strike (Letter First):"
+    cell = gets.chomp
+    cell = cell.split("")
+    column = converter[cell[0].upcase]
+    row = cell[1].to_i
     strike = [row, column]
     hit = false
     destroyed = false
@@ -278,10 +280,10 @@ class Game
       puts Terminal::Table.new :title => "Opponent's Board:", :rows => @opBoard
       if @playerShips.length == 0
         puts "You lose!"
-        break
+        gameRunning = false
       elsif @aiShips.length == 0
         puts "You win!"
-        break
+        gameRunning = false
       end
     end
   end
