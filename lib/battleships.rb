@@ -377,13 +377,13 @@ class AI
       return @previousStrike
     else
       # check above
-      if @previousStrike[0] - 1 < 1 || playerBoard[@previousStrike[0] - 1][@previousStrike[1]] == miss || playerBoard[@previousStrike[0] - 1][@previousStrike[1]] == explosion
+      if @previousStrike[0] == 1 || playerBoard[@previousStrike[0] - 1][@previousStrike[1]] == miss || playerBoard[@previousStrike[0] - 1][@previousStrike[1]] == explosion
         # check below
-        if @previousStrike[0] + 1 > 7 || playerBoard[@previousStrike[0] + 1][@previousStrike[1]] == miss || playerBoard[@previousStrike[0] + 1][@previousStrike[1]] == explosion
+        if @previousStrike[0] == 7 || playerBoard[@previousStrike[0] + 1][@previousStrike[1]] == miss || playerBoard[@previousStrike[0] + 1][@previousStrike[1]] == explosion
           # check left
-          if @previousStrike[1] - 1 < 1 || playerBoard[@previousStrike[0]][@previousStrike[1] - 1] == miss || playerBoard[@previousStrike[0]][@previousStrike[1] - 1] == explosion
+          if @previousStrike[1] == 1 || playerBoard[@previousStrike[0]][@previousStrike[1] - 1] == miss || playerBoard[@previousStrike[0]][@previousStrike[1] - 1] == explosion
             # check right
-            if @previousStrike[1] + 1 > 7 || playerBoard[@previousStrike[0]][@previousStrike[1] + 1] == miss || playerBoard[@previousStrike[0]][@previousStrike[1] + 1] == explosion
+            if @previousStrike[1] == 7 || playerBoard[@previousStrike[0]][@previousStrike[1] + 1] == miss || playerBoard[@previousStrike[0]][@previousStrike[1] + 1] == explosion
               @previousStrike = getRandomStrike(playerBoard, miss, explosion)
               return @previousStrike
             else
@@ -399,7 +399,7 @@ class AI
         else
           # return cell below
           @previousStrike[0] += 1
-          return @previouStrike
+          return @previousStrike
         end
       else
         # return cell above
