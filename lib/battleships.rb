@@ -360,7 +360,7 @@ class Ship
   end
 end
 
-# UNFINISHED AND NOT IN-GAME
+# UNFINISHED AND but IN-GAME
 
 class AI
   attr_accessor :previousStrikeHit
@@ -372,6 +372,17 @@ class AI
 
   def calculateStrike(playerBoard, miss, explosion)
     if !@previousStrikeHit
+      # Try middle cells
+      j = 2
+      until j == 6
+        for i in 1..7
+          if playerBoard[j][i] != miss && playerBoard[j][i] != explosion
+            @previousStrike = [j, i]
+            return @previousStrike
+          end
+        end
+        j += 2
+      end
       # Find random cell to strike
       @previousStrike = getRandomStrike(playerBoard, miss, explosion)
       return @previousStrike
