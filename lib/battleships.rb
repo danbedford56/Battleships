@@ -83,11 +83,11 @@ class Game
               break
             end
           end
-          if direction == "up" && (row - (ship.size - 1) < 0)
+          if direction == "up" && (row - (ship.size - 1) < 1)
             puts "Ship does not fit."
           elsif direction == "down" && (row + (ship.size - 1) > 7)
             puts "Ship does not fit."
-          elsif direction == "left" && (column - (ship.size - 1) < 0)
+          elsif direction == "left" && (column - (ship.size - 1) < 1)
             puts "Ship does not fit."
           elsif direction == "right" && (column + (ship.size - 1) > 7)
             puts "Ship does not fit."
@@ -221,6 +221,43 @@ class Game
     end
   end
 
+  def aiMove(playerBoard, miss, explosion, ai)
+    strike = ai.calculateStrike(playerBoard, miss, explosion)
+    hit = false
+    destroyed = false
+    # Checks if strike is true
+    @playerShips.each do |ship|
+      ship.coords.each do |coord|
+        if strike == coord
+          hit = true
+          ai.previousStrikeHit = true
+          ship.damage
+          if ship.isDead
+            destroyed = true
+            @playerShips.delete(ship)
+          end
+          break
+        else
+          ai.previousStrikeHit = false
+        end
+      end
+      if hit
+        break
+      end
+    end
+    if destroyed
+      puts "Your opponent destroyed a ship!"
+      @playerBoard[strike[0]][strike[1]] = explosion
+      ai.previousStrikeHit = false
+    elsif hit
+      puts "Your opponent hit!"
+      @playerBoard[strike[0]][strike[1]] = explosion
+    else
+      puts "Your opponent missed!"
+      @playerBoard[strike[0]][strike[1]] = miss
+    end
+  end
+
   def playerMove(converter, explosion, miss)
     cellValid = false
     while !cellValid
@@ -272,50 +309,9 @@ class Game
     end
   end
 
-  def aiMove(miss, explosion)
-    while true
-      row = rand(1..7)
-      column = rand(1..7)
-      strike = [row, column]
-      if @playerBoard[strike[0]][strike[1]] != miss && @playerBoard[strike[0]][strike[1]] != explosion
-        break
-      end
-    end
-
-    hit = false
-    destroyed = false
-    # Checks if strike is true
-    @playerShips.each do |ship|
-      ship.coords.each do |coord|
-        if strike == coord
-          hit = true
-          ship.damage
-          if ship.isDead
-            destroyed = true
-            @playerShips.delete(ship)
-          end
-          break
-        end
-      end
-      if hit
-        break
-      end
-    end
-    if destroyed
-      puts "Your opponent destroyed a ship!"
-      @playerBoard[strike[0]][strike[1]] = explosion
-    elsif hit
-      puts "Your opponent hit!"
-      @playerBoard[strike[0]][strike[1]] = explosion
-    else
-      puts "Your opponent missed!"
-      @playerBoard[strike[0]][strike[1]] = miss
-    end
-  end
-
   def runGame(converter, water, boat, explosion, miss)
     gameRunning = true
-
+    ai = AI.new
     # Ship placement
     aiPlaceShips(boat)
     placeShips(converter, boat)
@@ -326,7 +322,7 @@ class Game
     # Main game loop
     while gameRunning == true
       playerMove(converter, explosion, miss)
-      aiMove(miss, explosion)
+      aiMove(@playerBoard, miss, explosion, ai)
       puts Terminal::Table.new :title => "Your Board:", :rows => @playerBoard
       puts Terminal::Table.new :title => "Opponent's Board:", :rows => @opBoard
       # Win/loss check
@@ -361,6 +357,68 @@ class Ship
     else
       return false
     end
+  end
+end
+
+# UNFINISHED AND NOT IN-GAME
+
+class AI
+  attr_accessor :previousStrikeHit
+
+  def initialize
+    @previousStrikeHit = false
+    @previousStrike = []
+  end
+
+  def calculateStrike(playerBoard, miss, explosion)
+    if !@previousStrikeHit
+      # Find random cell to strike
+      @previousStrike = getRandomStrike(playerBoard, miss, explosion)
+      return @previousStrike
+    else
+      # check above
+      if @previousStrike[0] - 1 < 1 || playerBoard[@previousStrike[0] - 1][@previousStrike[1]] == miss || playerBoard[@previousStrike[0] - 1][@previousStrike[1]] == explosion
+        # check below
+        if @previousStrike[0] + 1 > 7 || playerBoard[@previousStrike[0] + 1][@previousStrike[1]] == miss || playerBoard[@previousStrike[0] + 1][@previousStrike[1]] == explosion
+          # check left
+          if @previousStrike[1] - 1 < 1 || playerBoard[@previousStrike[0]][@previousStrike[1] - 1] == miss || playerBoard[@previousStrike[0]][@previousStrike[1] - 1] == explosion
+            # check right
+            if @previousStrike[1] + 1 > 7 || playerBoard[@previousStrike[0]][@previousStrike[1] + 1] == miss || playerBoard[@previousStrike[0]][@previousStrike[1] + 1] == explosion
+              @previousStrike = getRandomStrike(playerBoard, miss, explosion)
+              return @previousStrike
+            else
+              # return cell to the right
+              @previousStrike[1] += 1
+              return @previousStrike
+            end
+          else
+            # return cell to the left
+            @previousStrike[1] -= 1
+            return @previousStrike
+          end
+        else
+          # return cell below
+          @previousStrike[0] += 1
+          return @previouStrike
+        end
+      else
+        # return cell above
+        @previousStrike[0] -= 1
+        return @previousStrike
+      end
+    end
+  end
+
+  def getRandomStrike(playerBoard, miss, explosion)
+    while true
+      row = rand(1..7)
+      column = rand(1..7)
+      strike = [row, column]
+      if playerBoard[strike[0]][strike[1]] != miss && playerBoard[strike[0]][strike[1]] != explosion
+        break
+      end
+    end
+    return strike
   end
 end
 
